@@ -42,7 +42,7 @@ function App() {
     const dog = dogs[dogIndex];
     const isBanned = dog && (bannedList.includes(dog.weight.imperial) || bannedList.includes(dog.name) || bannedList.includes(dog.life_span));
     if (isBanned) {
-      generateRandomIndex(data);
+      return generateRandomIndex(data);
     } else {
       return index;
     }
