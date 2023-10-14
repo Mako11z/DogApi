@@ -91,7 +91,7 @@ function App() {
             <br />
             <strong>Name: </strong> {dogs[dogIndex].name} <br />
             <strong>Weight: </strong> {dogs[dogIndex].weight.imperial} <br />
-            <string>Life Span</string> {dogs[dogIndex].life_span} <br />
+            <strong>Life Span</strong> {dogs[dogIndex].life_span} <br />
             </>
             <button onClick={handleNextClick}>
               Random Dog
