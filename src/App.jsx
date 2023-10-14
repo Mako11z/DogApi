@@ -1,88 +1,121 @@
 import React, { useEffect, useState } from 'react';
-const api_key = import.meta.env.API_KEY;
 
-const url = 'https://api.thecatapi.com/v1/images/search';
-const breedsUrl = 'https://api.thecatapi.com/v1/breeds';
+const breedsUrl = 'https://api.thedogapi.com/v1/breeds'; 
+const imageUrl = 'https://api.thedogapi.com/v1/images/';
+const api_key = import.meta.env.API_KEY; 
 
 function App() {
-  const [dogData, setDogData] = useState(null);
-  const [banList, setBanList] = useState([]);
-  const [breeds, setBreeds] = useState([]);
-  const [selectedBreed, setSelectedBreed] = useState('');
-  
+
+  const [dogs, setDogs] = useState([]);
+  const [imageURL, setImageURL] = useState('');
+  const [dogIndex, setDogIndex] = useState(0); // Hold the current index of the current dogs data
+  const [bannedList, setBannedList] = useState([]); // Hold the banned elements
+
   useEffect(() => {
-    fetchBreeds();
-  }, []);
+      const fetchData = async () => {
+        try {
+          const response = await fetch(breedsUrl, {
+            headers: {
+              'x-api-key' : api_key,
+            },
+          });
+          console.log('Response status:', response.status);
+          const data = await response.json();
+          console.log(data);
+          setDogs(data);
 
-  const fetchBreeds = async () => {
-    try {
-      const response = await fetch(breedsUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
-      }
-      const breedData = await response.json();
-      setBreeds(breedData);
-    } catch (error) {
-      console.log('Error fetching breed data');
+          if (data.length > 0) {
+            setDogIndex(generateRandomIndex(data)); // Get a random index
+            fetchDogImage(data, dogIndex);
+          }
+        } catch (error) {
+          console.log("Error fetching data: ", error);
+        }
+      };
+      
+    fetchData();
+  }, []); // Empty dependency array ensures this effect runs once on mount
+
+  // Generate a random index to display new information each time
+  const generateRandomIndex = (data) => {
+    const index =  Math.floor(Math.random() * data.length);
+    const dog = dogs[dogIndex];
+    const isBanned = dog && (bannedList.includes(dog.weight.imperial) || bannedList.includes(dog.name) || bannedList.includes(dog.life_span));
+    if (isBanned) {
+      generateRandomIndex(data);
+    } else {
+      return index;
     }
   }
 
-  const fetchData = async () => {
-    try {
-      const breedFilter = selectedBreed ? `&breed_ids=${selectedBreed}` : '';
-      const response = await fetch(`${url}?${breedFilter}`, {
-        headers: {
-          'x-api-key': api_key,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP Error, status: ${response.status}`);
-      } 
+  const addToBannedList = (newElement) => {
+    setBannedList(prevList => [...prevList, newElement]);
+  };
 
-      const data = await response.json();
-      if (data && !isBanned(data[0])) {
-        setDogData(data);
-      } else {
-        fetchData();
+  const fetchDogImage = async (data, index) => {
+    if (data[index].reference_image_id) {
+      try {
+        // Data for that specific dog
+        const imageResponse = await fetch(`${imageUrl}${data[index].reference_image_id}`);
+        if (imageResponse.ok) {
+          const imageData = await imageResponse.json();
+          // Set the url
+          setImageURL(imageData.url);
+        }
+      } catch (error) {
+        console.log('Error fetching url for image', error);
       }
-    } catch (error) {
-      console.log('Error fetching data', error);
     }
   };
 
-  const isBanned = (item) => {
-    return banList.some((bannedCheck) => item[bannedCheck]);
-  };
-
-  const addToBanList = (at) => {
-    setBanList((prevBanList) => [...prevBanList, at]); // Add item to ban list
-  }
 
   const handleNextClick = () => {
-    fetchData();
+    const newIndex = generateRandomIndex(dogs);
+    setDogIndex(newIndex);
+    fetchDogImage(dogs, newIndex);
   }
-  
+
+
   return (
     <>
-      <h1>Cat API Demo</h1>
-      <label>
-        Select Breed:
-        <select onChange={(e) => setSelectedBreed(e.target.value)}>
-          <option value="">All Breeds</option>
-          {breeds.map((breed) => (
-            <option key={breed.id} value={breed.id}>
-              {breed.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button onClick={handleNextClick}>Next</button>
-      <button onClick={() => addToBanList('name')}>Ban this name</button>
-      {dogData && (
-        <div>
-          <img src={dogData[0].url} alt="Cat Image" />
-        </div>
-      )}
+     <h1>Dog Information</h1>
+     <ul>
+     {dogs.length > 0 && (
+          <>
+          <img
+            src={imageURL}
+            alt={`image of dog`} 
+            style={{ width: '200px', height: 'auto' }}
+            />
+            <>
+            <br />
+            <strong>Name: </strong> {dogs[dogIndex].name} <br />
+            <strong>Weight: </strong> {dogs[dogIndex].weight.imperial} <br />
+            <string>Life Span</string> {dogs[dogIndex].life_span} <br />
+            </>
+            <button onClick={handleNextClick}>
+              Random Dog
+            </button>
+            <button onClick={() => addToBannedList(dogs[dogIndex].name)}>
+              Ban Dog name
+            </button>
+            <button onClick={() => addToBannedList(dogs[dogIndex].life_span)}>
+              Ban Dog life span
+            </button>
+            <button onClick={() => addToBannedList(dogs[dogIndex].weight.imperial)}>
+              Ban Dog weight
+            </button>
+              </>
+        )}
+     </ul>
+     <div>
+      <h6>Banned Elements</h6>
+      <ul>
+      {bannedList.map((element, index) => (
+        <li key={index}>{element}</li>
+      ))}
+      </ul>
+     </div>
     </>
   );
 }
