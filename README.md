@@ -30,7 +30,7 @@ The following **additional** features are implemented:
 
 Here's a walkthrough of implemented user stories:
 
-![Walkthrough](CatApiWalthrough)
+![Walkthrough](DogApiWalkthrough.gif)
 
 <!-- Replace this with whatever GIF tool you used! -->
 

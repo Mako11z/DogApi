@@ -39,8 +39,12 @@ function App() {
   // Generate a random index to display new information each time
   const generateRandomIndex = (data) => {
     const index =  Math.floor(Math.random() * data.length);
-    const dog = dogs[dogIndex];
-    const isBanned = dog && (bannedList.includes(dog.weight.imperial) || bannedList.includes(dog.name) || bannedList.includes(dog.life_span));
+    const dog = dogs[index];
+
+    const isBanned = dog && (bannedList.includes(String(dog.weight.imperial)) || 
+           bannedList.includes(String(dog.name)) ||
+           bannedList.includes(String(dog.life_span)));
+
     if (isBanned) {
       return generateRandomIndex(data);
     } else {
